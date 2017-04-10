@@ -1,1 +1,7 @@
+<<<<<<< HEAD
 Hello world! i m zhen kkk
+=======
+Hello world! i m zhen
+im chaosheng
+im fan
+>>>>>>> db3b509caae0bff75577f77e9a8983c20eb430f2
