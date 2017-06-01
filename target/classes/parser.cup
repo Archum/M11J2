@@ -1,0 +1,760 @@
+package org.ifn660.jflexer;
+
+import java_cup.runtime.*;
+import org.ifn660.jflexer.ast.*;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+/* Symbol lists
+These declarations name and supply an object type for each terminal and non-terminal symbol that appears in the grammar
+Terminals are returned by the scanner and placed on the parse stack
+Non-terminals replace a series of Symbol objects on the parse stack when the RHS of a production is recognised
+*/
+
+parser code 
+{:
+	public Node root;
+:}
+
+terminal        String INT; 
+terminal        BOOLEAN, CHAR, CONST, DOUBLE, FLOAT, LONG, SHORT;
+terminal        CLASS, SUPER, INTERFACE, EXTENDS, IMPLEMENTS;
+terminal        String VOID;
+terminal        NULL;
+terminal        IF, ELSE, DO, WHILE, FOR, CASE, SWITCH, BREAK;
+terminal        RETURN;
+terminal        String PUBLIC, PRIVATE, PROTECTED, ABSTRACT, STRICTFP, FINAL, STATIC;
+terminal        ASSERT, BYTE;
+terminal        CONTINUE, DEFAULT, ENUM, FINALLY, GOTO;
+terminal        IMPORT, INSTANCEOF, NATIVE, NEW, PACKAGE;
+terminal        SYNCHRONIZED, THIS, TRANSIENT, VOLATILE;
+terminal        CATCH, TRY, THROW, THROWS;
+terminal        String IDENTIFIER;
+terminal        String OP_EQ, OP_GT, OP_LT, OP_NOT_EQ, OP_UNARY, OP_TERNARY, OP_LOOP_IN, OP_LAMBDA, 
+                OP_EQ_EQ, OP_GT_EQ, OP_LT_EQ, OP_LOGIC_AND, OP_LOGIC_OR, OP_POS_INCR, 
+                OP_NEG_INCR, OP_PLUS, OP_MINUS, OP_MULTIPLY, OP_DIVIDE, OP_AND, OP_OR, OP_XOR, 
+                OP_MODULUS, OP_BIT_L_SHIFT, OP_BIT_R_SHIFT, OP_UNSIGN_R_SHIFT, OP_ADD_AND, OP_MINUS_AND, 
+                OP_MULTIPLY_AND, OP_DIVIDE_AND, OP_BIT_AND, OP_BIT_INCL_OR, OP_BIT_EXCL_OR, 
+                OP_MODULUS_AND, OP_L_SHIFT_AND, OP_R_SHIFT_AND, OP_UNSIGN_R_SHIFT_AND;
+terminal        Integer INTEGER_LITERAL;
+terminal        STRING_LITERAL;
+terminal        LPAREN, RPAREN, LBRACE, RBRACE, LBRACK, RBRACK, SEMICOLON, COMMA, DOT;
+terminal        UNKNOWN;
+
+nonterminal      Node CompilationUnit, TypeDeclaration_opt, TypeDeclaration, ClassDeclaration;
+nonterminal      Node NormalClassDeclaration;
+nonterminal      ClassBody ClassBody;
+nonterminal      List<Declaration> ClassBodyDeclaration_opt; 
+nonterminal      Declaration ClassBodyDeclaration;
+nonterminal      List<String> ClassModifier_opt;
+nonterminal      Type Result;
+nonterminal      String ClassModifier;
+nonterminal      TempWrapper VariableDeclaratorList, VariableDeclarator; 
+nonterminal      VariableDeclarator_opt;
+nonterminal      VariableInitializer VariableInitializer_opt, VariableInitializer;
+nonterminal      Dims_opt, Dims;
+nonterminal      MethodDeclaration MethodDeclaration;
+nonterminal      Declaration  ClassMemberDeclaration;
+nonterminal      List<String> Modifier_opt;
+nonterminal      String Modifier;
+nonterminal      TempWrapper MethodHeader;
+nonterminal      MethodBody MethodBody;
+nonterminal      TempWrapper MethodDeclarator; 
+nonterminal      List<Parameter> FormalParameterList_opt, FormalParameterList;
+nonterminal      Parameter LastFormalParameter;
+nonterminal      Parameter FormalParameter;
+nonterminal      List<Statement> Block, BlockStatements, BlockStatement_opt; 
+nonterminal      Statement BlockStatement, Statement, StatementWithoutTrailingSubstatement, ExpressionStatement, StatementExpression,IfThenStatement,ElseIfStatement,ElseStatement;
+nonterminal      LocalVariableDeclarationStatement LocalVariableDeclarationStatement, LocalVariableDeclaration;
+nonterminal      Type UnannType; 
+nonterminal      Type UnannPrimitiveType; 
+nonterminal      Type UnannReferenceType; 
+nonterminal      ElementType UnannClassOrInterfaceType, UnannClassType, UnannArrayType;
+nonterminal      Type NumericType, IntegralType, FloatingPointType;
+nonterminal      IdentifierNode Identifier, VariableDeclaratorId;
+nonterminal      IdentifierExpression ExpressionName, LeftHandSide;
+nonterminal      Integer Literal;
+nonterminal      IntegerLiteralExpression PrimaryNoNewArray;
+nonterminal      Expression Primary, PostfixExpression, UnaryExpressionNotPlusMinus;
+nonterminal      Expression UnaryExpression, MultiplicativeExpression, AdditiveExpression, ShiftExpression;
+nonterminal      Expression RelationalExpression, EqualityExpression, AndExpression, ExclusiveOrExpression;
+nonterminal      Expression InclusiveOrExpression, ConditionalAndExpression, ConditionalOrExpression;
+nonterminal      Expression ConditionalExpression, AssignmentExpression, Expression;
+nonterminal      PackageDelcaration_opt, PackageDelcaration, ImportDeclaration_opt, ImportDeclaration;
+nonterminal      TypeParameters_opt, TypeParameters, Superclass_opt, Superclass, Superinterfaces_opt, Superinterfaces;
+nonterminal      Throws_opt, Throws, TypeArguments_opt, TypeArguments;
+nonterminal      PreIncrementExpression, PreDecrementExpression;
+nonterminal      PostIncrementExpression, PostDecrementExpression, ArrayCreationExpression;
+nonterminal		 CastExpression;
+nonterminal      AssignmentExpression Assignment;
+nonterminal      AssignmentOperator AssignmentOperator;
+nonterminal      FieldDeclaration FieldDeclaration;
+nonterminal      MethodInvocationStatement MethodInvocation;
+nonterminal      List<String> Name;
+nonterminal      List<Expression> ArgumentList_opt;
+nonterminal      List<Expression> PackageOrTypeName, ExpressionComma_opt, ArgumentList;
+
+/* Compilation related grammar */
+
+CompilationUnit             ::= PackageDelcaration_opt ImportDeclaration_opt TypeDeclaration_opt;
+
+PackageDelcaration_opt      ::= PackageDelcaration
+                            | /* empty */
+                            ;
+
+ImportDeclaration_opt       ::= ImportDeclaration_opt ImportDeclaration
+                            | /* empty */
+                            ;
+
+TypeDeclaration_opt         ::= TypeDeclaration_opt TypeDeclaration 
+                            | /* empty */
+                            ;
+
+TypeDeclaration             ::= ClassDeclaration;
+
+ClassDeclaration            ::= NormalClassDeclaration;
+
+NormalClassDeclaration      ::= ClassModifier_opt:cmdOpt CLASS Identifier:i TypeParameters_opt Superclass_opt Superinterfaces_opt ClassBody:cb
+							{:
+								RESULT = new ClassDeclaration(i, cmdOpt, cb);
+								parser.root = (Node)RESULT;
+							:};
+
+TypeParameters_opt           ::= TypeParameters
+                            | /* empty */
+                            ;
+                               
+Superclass_opt              ::= Superclass
+                            | /* empty */
+                            ;
+                               
+Superinterfaces_opt          ::= Superinterfaces
+                            | /* empty */
+                            ;
+
+ClassModifier_opt           ::= ClassModifier_opt:cmdOpt ClassModifier:cm 
+                            {: 
+                                if (cmdOpt == null) {
+                                    cmdOpt = new ArrayList<>();
+                                }
+                                RESULT = cmdOpt;
+                                RESULT.add (cm); 
+                            :}
+                            | /* empty */
+                            ;
+
+ClassModifier               ::= PUBLIC:p {: RESULT = p; :} | PROTECTED:p {: RESULT = p; :} | PRIVATE:p {: RESULT = p; :} | ABSTRACT:p {: RESULT = p; :} | STATIC:s {: RESULT = (String)s; :} | FINAL:p {: RESULT = p; :} | STRICTFP:p {: RESULT = p; :};
+
+ClassBody                   ::= LBRACE ClassBodyDeclaration_opt:cbOpt 
+                            {: 
+                                 RESULT = new ClassBody(cbOpt); 
+                            :} RBRACE
+                            ;
+
+Identifier                  ::= IDENTIFIER:i {: RESULT = new IdentifierNode(i); :};
+
+ClassBodyDeclaration_opt    ::= ClassBodyDeclaration_opt:cbd_opt ClassBodyDeclaration:cb 
+                            {: 
+                            if (cbd_opt == null) {
+                                    cbd_opt = new ArrayList<>();
+                                }
+                                RESULT = cbd_opt;
+                                RESULT.add (cb); 
+                            :}
+                            | /* empty */
+                            ;
+
+ClassBodyDeclaration        ::= ClassMemberDeclaration:cmd {: RESULT = cmd; :};
+
+ClassMemberDeclaration      ::= FieldDeclaration:fd
+                            {:
+                                 RESULT = fd;
+                            :}
+                             |MethodDeclaration:md {: RESULT = md; :}
+                             |SEMICOLON
+                            ;
+                            
+FieldDeclaration            ::= Modifier_opt:mm_opt UnannType:ut VariableDeclaratorList:vdl SEMICOLON
+                            {:
+                                RESULT = new FieldDeclaration(mm_opt, ut, vdl.variabledeclaratorid, vdl.variableinitializer);
+                            :}
+                            ;
+
+
+/* Method related grammar */
+
+MethodDeclaration           ::= Modifier_opt:mmOpt MethodHeader:mh MethodBody:mb
+                            {: 
+                                RESULT = new MethodDeclaration(mmOpt, mh.result, mh.identifiernode, mh.parameters, mb);
+                                
+                            :};
+
+Modifier_opt          ::= Modifier_opt:mmOpt Modifier:mm
+                            {:
+                                if (mmOpt == null) {
+                                    mmOpt = new ArrayList<>();
+                                }
+                                RESULT = mmOpt;
+                                RESULT.add(mm);
+                            :}
+                            | /* empty */
+                            ;
+
+Modifier                    ::= PUBLIC:p {: RESULT = p; :} | PROTECTED:p {: RESULT = p; :} | PRIVATE:p {: RESULT = p; :} | ABSTRACT:p {: RESULT = p; :} | STATIC:p {: RESULT = p; :} | FINAL:p {: RESULT = p; :} | STRICTFP:p {: RESULT = p; :};
+
+MethodHeader                ::= Result:i MethodDeclarator:md Throws_opt
+                            {:
+                                RESULT = new TempWrapper();
+                                RESULT.result = new Result(i);
+                                RESULT.identifiernode = md.identifiernode; /* TODO expand in the future */
+                                RESULT.parameters = md.parameters;
+                            :};
+
+Throws_opt                  ::= Throws
+                            | /* empty */
+                            ;
+
+Result                      ::= VOID:v {: RESULT = new NamedType(v); :};
+
+MethodDeclarator            ::= Identifier:id LPAREN FormalParameterList_opt:fpl_opt RPAREN
+                            {:
+                                RESULT = new TempWrapper();                                
+                                RESULT.identifiernode = id;
+                                RESULT.parameters = fpl_opt;
+                                
+                            :}
+                            ;
+
+FormalParameterList_opt     ::= FormalParameterList:fpl
+                            {:
+                                RESULT = fpl;
+                            :}
+                            | /* empty */
+                            ;
+
+FormalParameterList         ::= LastFormalParameter:lfp
+                            {:
+                                RESULT = new ArrayList<>();
+                                RESULT.add (lfp);
+                            :}
+                            ;
+
+LastFormalParameter         ::= FormalParameter:fp
+                            {:
+                                 RESULT = fp;
+                            :}
+                            ;
+
+FormalParameter             ::= Modifier_opt UnannType:ut VariableDeclaratorId:vdi
+                            {:
+                                 RESULT = new Parameter (ut, vdi);
+                            :}
+                            ;
+
+UnannReferenceType          ::= UnannArrayType:uat
+                            {:
+                                 RESULT = new ArrayType(uat);
+                            :}
+                            ;
+
+UnannArrayType              ::= UnannClassOrInterfaceType:ucoit Dims
+                            {:
+                                 RESULT = ucoit;
+                            :}
+                            ;
+
+Dims                        ::= LBRACK RBRACK;
+
+UnannClassOrInterfaceType   ::= UnannClassType:uct
+                            {:
+                                 RESULT = uct;
+                            :}
+                            ;
+
+UnannClassType              ::= Identifier:id TypeArguments_opt
+                            {:
+                                 RESULT = new ElementType(id);
+                            :}
+                            ;
+
+TypeArguments_opt           ::= TypeArguments
+                            | /* empty */
+                            ;
+
+/* Assignment Expression related grammar */
+
+Expression                  ::= AssignmentExpression:ae
+                            {:
+                                RESULT = ae;
+                            :}
+                            ;
+
+AssignmentExpression        ::= ConditionalExpression:ce
+                            {:
+                                RESULT = ce;
+                            :}
+                            | Assignment:ass
+                            {:
+                                 RESULT = ass;
+                            :}
+                            ;
+                            
+Assignment                  ::= LeftHandSide:lhs AssignmentOperator:ao Expression:e
+                            {:
+                                 RESULT = new AssignmentExpression(lhs, ao, e);
+                            :}
+                            ;
+                            
+LeftHandSide                ::= ExpressionName:en
+                            {:
+                                 RESULT = en;
+                            :}
+                            ;
+                            
+AssignmentOperator          ::= OP_EQ:eq
+                            {:
+                                 RESULT = new AssignmentOperator(eq);
+                            :}
+                            | OP_MULTIPLY_AND
+                            | OP_DIVIDE_AND
+                            | OP_MODULUS_AND
+                            | OP_ADD_AND
+                            | OP_MINUS_AND
+                            | OP_L_SHIFT_AND
+                            | OP_R_SHIFT_AND
+                            | OP_UNSIGN_R_SHIFT_AND
+                            | OP_BIT_AND
+                            | OP_BIT_EXCL_OR
+                            | OP_BIT_INCL_OR
+                            ;
+
+ConditionalExpression       ::= ConditionalOrExpression:coe
+                            {:
+                                RESULT = coe;
+                            :}
+                            | ConditionalOrExpression OP_TERNARY Expression OP_LOOP_IN ConditionalExpression
+
+;
+
+ConditionalOrExpression     ::= ConditionalAndExpression:cae
+                            {:
+                                RESULT = cae;
+                            :}
+                            ;
+
+ConditionalAndExpression    ::= InclusiveOrExpression:ioe
+                            {:
+                                RESULT = ioe;
+                            :}
+                            ;
+
+InclusiveOrExpression       ::= ExclusiveOrExpression:eoe
+                            {:
+                                RESULT = eoe;
+                            :}
+                            ;
+
+ExclusiveOrExpression       ::= AndExpression:ae
+                            {:
+                                RESULT = ae;
+                            :}
+							| ExclusiveOrExpression OP_XOR AndExpression
+							;
+
+AndExpression               ::= EqualityExpression:ee
+                            {:
+                                RESULT = ee;
+                            :}
+                            | AndExpression:ae OP_LOGIC_AND:ola EqualityExpression:ee
+                            {:
+                            	RESULT = new BinaryExpression(ae,ee,new BinaryOperator(ola));
+                            :}
+                            ;
+
+EqualityExpression          ::= RelationalExpression:re
+                            {:
+                                RESULT = re;
+                            :}
+                            | EqualityExpression:ee OP_EQ_EQ:oee RelationalExpression:re
+                            {:
+                            	RESULT = new BinaryExpression(ee,re, new BinaryOperator(oee));
+                            :}
+                            | EqualityExpression:ee OP_NOT_EQ:noteq RelationalExpression:re
+                            {:
+                            	RESULT = new BinaryExpression(ee,re,new BinaryOperator(noteq));
+                            :}
+							;
+RelationalExpression        ::= ShiftExpression:se
+                            {:
+                                RESULT = se;
+                            :}
+                            |RelationalExpression:re OP_LT:ol ShiftExpression:se 
+                            {:
+                                RESULT = new BinaryExpression(re,se,new BinaryOperator(ol));
+                            :}
+                            |RelationalExpression:re OP_GT:og ShiftExpression:se 
+                            {:
+                            RESULT = new BinaryExpression(re,se,new BinaryOperator(og));
+                            :}
+                            |RelationalExpression:re OP_GT_EQ:oge ShiftExpression:se 
+                            {:
+                            RESULT = new BinaryExpression(re,se,new BinaryOperator(oge));
+                            :}
+                            
+                            |RelationalExpression:re OP_LT_EQ:ole ShiftExpression:se 
+                            {:
+                            RESULT = new BinaryExpression(re,se,new BinaryOperator(ole));
+                            
+                            :}
+                           // |RelationalExpression instanceof ReferenceType
+                            
+                            ;
+
+ShiftExpression             ::= AdditiveExpression:ae
+                            {:
+                                RESULT = ae;
+                            :}
+                            | ShiftExpression:se OP_BIT_L_SHIFT:obls AdditiveExpression:ae
+                            {:
+                            	RESULT = new BinaryExpression(se,ae, new BinaryOperator(obls));
+                            :}
+                            | ShiftExpression:se OP_BIT_R_SHIFT:obrs AdditiveExpression:ae
+                            {:
+                            	RESULT = new BinaryExpression(se,ae,new BinaryOperator(obrs));
+                            :}
+                            | ShiftExpression OP_UNSIGN_R_SHIFT AdditiveExpression;
+
+AdditiveExpression          ::= MultiplicativeExpression:me
+                            {:
+                                RESULT = me;
+                            :}
+							| AdditiveExpression:lhs OP_PLUS:op MultiplicativeExpression:rhs
+							{:
+							    RESULT = new BinaryExpression(lhs, rhs, new BinaryOperator (op));
+							:}
+							| AdditiveExpression OP_MINUS MultiplicativeExpression
+							;
+
+MultiplicativeExpression    ::= UnaryExpression:ue
+                            {:
+                                RESULT = ue;
+                            :}
+                            |MultiplicativeExpression:me OP_MULTIPLY:om UnaryExpression:ue
+                            {:
+                            	RESULT = new BinaryExpression(me,ue, new BinaryOperator(om));
+                            :}
+                            |MultiplicativeExpression:me OP_DIVIDE:od UnaryExpression:ue
+                            {:
+                            	RESULT = new BinaryExpression(me,ue,new BinaryOperator(od));
+                            :}
+                            |MultiplicativeExpression:me OP_MODULUS:om UnaryExpression:ue
+                            {:
+                            	RESULT = new BinaryExpression(me,ue,new BinaryOperator(om));
+                            :};
+
+UnaryExpression             ::= PreIncrementExpression
+                            | PreDecrementExpression
+                            | OP_PLUS UnaryExpression
+                            | OP_MINUS UnaryExpression
+                            | UnaryExpressionNotPlusMinus:unp
+                            {:
+                                RESULT = unp;
+                            :}
+                            ;
+                            
+UnaryExpressionNotPlusMinus ::= PostfixExpression:pe
+                            {:
+                                RESULT = pe;
+                            :}
+							| OP_UNARY UnaryExpression
+							| OP_NOT_EQ UnaryExpression
+							| CastExpression;
+
+PostfixExpression           ::= Primary:p
+                            {:
+                                RESULT = p;
+                            :}
+                            | ExpressionName:en
+                            {:
+                                 RESULT = en;
+                            :}
+                            | PostIncrementExpression
+                            | PostDecrementExpression
+                            ;
+
+Primary                     ::= PrimaryNoNewArray:pna
+                            {:
+                                RESULT = pna;
+                            :}
+                            | ArrayCreationExpression
+                            ;
+                            
+ExpressionName              ::= Identifier:id
+                            {:
+                                 RESULT = new IdentifierExpression(id);
+                            :}
+                            | Name DOT Identifier
+                            ;
+
+PrimaryNoNewArray           ::= Literal:l
+                            {:
+                                RESULT = new IntegerLiteralExpression(l);
+                            :}
+                            ;
+
+Literal                     ::= INTEGER_LITERAL:il
+                            {:
+                                RESULT = new Integer(il);
+                            :}
+                            ;
+
+/* Method body related grammar */
+
+MethodBody                  ::= Block:b
+                            {:
+                                 RESULT = new MethodBody(b);
+                            :}
+                            ;
+
+Block                       ::= LBRACE BlockStatements:bss RBRACE
+                            {:
+                                 RESULT = bss;
+                            :}
+                            ;
+
+BlockStatements             ::= BlockStatement:bs BlockStatement_opt: bs_opt  
+                            {:
+                                RESULT = new ArrayList<>();//zyx: 
+                                RESULT.add(bs);
+                                if (bs_opt != null) {
+                                	RESULT.addAll(bs_opt);
+                                }
+                            :}
+                            ;
+
+BlockStatement_opt          ::= BlockStatement_opt:bs_opt BlockStatement:bs
+                            {:
+                            	if (bs_opt == null) {
+                            		bs_opt = new ArrayList<>();
+                            	}
+                            	RESULT = bs_opt;
+                                RESULT.add(bs);
+                            :}//
+                            | /* empty */
+                            ;
+
+BlockStatement              ::= LocalVariableDeclarationStatement:lvds
+                            {:
+                                 RESULT = lvds;
+                            :}
+                            | Statement:s
+                            {:
+                                 RESULT = s;
+                            :}
+                            ;
+                            
+Statement                   ::= StatementWithoutTrailingSubstatement:swts
+                            {:
+                                 RESULT = swts;
+                            :}
+                            |IfThenStatement:its
+                            {:
+                                 RESULT = its;
+                            :}
+                            |ElseIfStatement:eits
+                            {:
+                                 RESULT = eits;
+                            :}
+                            |ElseStatement:ets
+                            {:
+                                 RESULT = ets;
+                            :}
+                            ;
+IfThenStatement             ::= IF LPAREN Expression:e RPAREN Statement:s
+                            {:
+                                 RESULT = new IfThenStatement(e,s);
+                            :}    
+                            ;
+ElseIfStatement             ::= ELSE IF LPAREN Expression:e RPAREN Statement:s
+                            {:
+                                 RESULT = new ElseIfStatement(e,s);
+                            :}    
+                            ; 
+ElseStatement               ::= ELSE Statement:s
+                            {:
+                                 RESULT = new ElseStatement(s);
+                            :}    
+                            ; 
+                            
+StatementWithoutTrailingSubstatement ::= Block:b
+                                     {:
+                                          RESULT = new StatementWithoutTrailingSubstatement(b);
+                                     :}
+                                     | ExpressionStatement:es
+                                     {:
+                                          RESULT = es;
+                                     :}
+                                     ;
+                                     
+ExpressionStatement         ::= StatementExpression:se SEMICOLON
+                            {:
+                                 RESULT = se;
+                            :}
+                            ;
+                            
+StatementExpression         ::= Assignment:ass
+                            {:
+                                 RESULT = new ExpressionStatement(ass);
+                            :}
+                            | MethodInvocation:mi
+                            {:
+                                RESULT = mi;
+                            :}
+                            ;
+
+LocalVariableDeclarationStatement ::= LocalVariableDeclaration:lvd SEMICOLON
+                                  {:
+                                       RESULT = lvd;
+                                  :}
+                                  ;
+
+LocalVariableDeclaration    ::= Modifier_opt UnannType:ut VariableDeclaratorList:vdl
+                            {:
+                                 RESULT = new LocalVariableDeclarationStatement(ut, vdl.variabledeclaratorid, vdl.variableinitializer);
+                            :}
+                            ;
+
+VariableDeclaratorList      ::= VariableDeclarator:vd  VariableDeclarator_opt
+
+
+                            {:
+                                 RESULT = vd;   
+                                 
+                            :}
+                            ;
+                            
+VariableDeclarator_opt      ::= COMMA VariableDeclarator_opt VariableDeclarator
+                            | /* empty */
+                            ;
+                            
+VariableDeclarator          ::= VariableDeclaratorId:vdi VariableInitializer_opt:vi_opt
+                            {:
+                                 RESULT = new TempWrapper();
+                                 RESULT.variabledeclaratorid = vdi;
+                                 RESULT.variableinitializer = vi_opt;
+                            :}
+                            ;
+
+VariableInitializer_opt     ::= OP_EQ VariableInitializer:vi
+                            {:
+                                RESULT = vi;
+                            :}
+                            | /* empty */
+                            ;
+                            
+VariableDeclaratorId        ::= Identifier:id Dims_opt
+                            {:
+                                 RESULT = id;
+                            :}
+                            ;
+
+Dims_opt                    ::= Dims
+                            | /* empty */
+                            ;
+
+VariableInitializer         ::= Expression:e
+                            {:
+                                RESULT = new VariableInitializer(e);
+                            :}
+                            ;
+
+UnannType                   ::= UnannPrimitiveType:upt
+                            {:
+                                 RESULT = upt;
+                            :}
+                            
+                            | UnannReferenceType:urt
+                            {:
+                                 RESULT = urt;
+                            :}
+                            ;
+
+UnannPrimitiveType          ::= NumericType:nt
+                            {:
+                                 RESULT = nt;
+                            :}
+                            /*| BOOLEAN*/
+                            ;
+
+NumericType                 ::= IntegralType:it
+                            {:
+                                 RESULT = it;
+                            :}
+                            | FloatingPointType
+                            ;
+
+IntegralType                ::= INT:i
+                            {:
+                                 RESULT = new NamedType(i);
+                            :}
+                            | CHAR
+                            | BYTE
+                            | SHORT
+                            | LONG
+                            ;
+
+FloatingPointType           ::= DOUBLE
+                            | FLOAT
+                            ;
+
+MethodInvocation            ::= Name:n DOT Identifier:m LPAREN ArgumentList_opt:alopt RPAREN
+                            {:
+                                RESULT = new MethodInvocationStatement(n,m,alopt);
+                            :}
+                            ;
+
+Name                        ::= Identifier:i 
+                            {:
+                                RESULT = new ArrayList<>();
+                                RESULT.add (i.value);
+                            :}
+                            | Name:n DOT Identifier:i 
+                            {:
+                                if (n == null) {
+                                    n = new ArrayList<>();
+                                }
+                                RESULT = n;
+                                RESULT.add (i.value);
+                            :}
+                            ;
+
+ArgumentList_opt            ::= ArgumentList:a
+                            {:
+                                RESULT = a;
+                            :}
+                            | /* empty */
+                            ;
+
+ArgumentList                ::= Expression:e ExpressionComma_opt:ec
+                            {:
+                                RESULT = new ArrayList<>();
+                                RESULT.add(e);
+                                if (ec != null) {
+                                    RESULT.addAll(ec);
+                                }
+                            :}
+                            ;
+
+ExpressionComma_opt         ::= ExpressionComma_opt:ec COMMA Expression:e
+                            {:
+                                if (ec == null) {
+                                    ec = new ArrayList<>();
+                                }
+                                RESULT = ec;
+                                RESULT.add (e);
+                            :}
+                            | /* empty */
+                            ;
+
