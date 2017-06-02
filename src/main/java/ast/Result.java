@@ -8,7 +8,6 @@ public class Result extends Node {
 	}
 	
 	public String getNameType() {
-		
 		return type.getNameType();
 	}
 }

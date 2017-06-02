@@ -2,9 +2,6 @@ package ast;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.security.cert.PKIXRevocationChecker.Option;
-
-import cil.CILOption;
 
 public class AssignmentExpression extends Expression {
     private IdentifierExpression leftHandSide;
@@ -25,8 +22,8 @@ public class AssignmentExpression extends Expression {
     }
     
     @Override
-    public void codeGeneration(Path path, CILOption cilOption) throws IOException {
-        expression.codeGeneration(path, cilOption);
-        leftHandSide.codeGeneration(path, CILOption.LEFT_HAND_SIDE);
+    public void codeGeneration(Path path) throws IOException {
+        expression.codeGeneration(path);
+        leftHandSide.codeGeneration(path);
     }
 }

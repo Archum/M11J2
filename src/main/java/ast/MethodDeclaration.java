@@ -1,13 +1,8 @@
 package ast;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
-
-import cil.CIL;
-import cil.CILOption;
 
 public class MethodDeclaration extends Node implements Declaration {
     private List<String> modifiers;
@@ -36,16 +31,10 @@ public class MethodDeclaration extends Node implements Declaration {
     }
 
     @Override
-    public void codeGeneration(Path path, CILOption cilOption) throws IOException {
-        emit(path, CIL.ONE_IDENT + ".method ");
+    public void codeGeneration(Path path) throws IOException {
         iterateModifiers(path, this.modifiers);
-        emit(path, result.getNameType() + " " + methodname.value + "(string[] args) \r\n" + CIL.ONE_IDENT + "{\r\n");
-        methodBody.codeGeneration(path, cilOption);
-        emit(path, CIL.ONE_IDENT + "}\r\n");
-    }
-
-    @Override
-    public int getCilLocalVarIndex() {
-        return 0;
+        emit(path, result.getNameType() + " " + methodname.value + "\r\n" + ONE_IDENT + "{\r\n");
+        methodBody.codeGeneration(path);
+        emit(path, ONE_IDENT + "}\r\n");
     }
 }

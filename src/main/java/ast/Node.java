@@ -8,53 +8,44 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import cil.CIL;
-import cil.CILOption;
-
 public abstract class Node {
     public static int INDEX_COUNT = 0;
+    
+    public static final String ONE_IDENT = "   ";
+    public static final String TWO_IDENT = "      ";   
+    public static final String THREE_IDENT = "          ";
+    
     public void resolveNames(LexicalScope scope) {
     }
 
-    public void codeGeneration(Path path, CILOption cilOption) throws IOException {
+    public void codeGeneration(Path path) throws IOException {
     }
 
     public void printNodeReflection(int identSize) {
 
         Node.indent(identSize);
-        System.out.println(this.getClass().getSimpleName()); // print the object
-                                                             // itself first
+        System.out.println(this.getClass().getSimpleName()); 
 
         Node.indent(identSize);
         System.out.println("{");
 
-        Field[] fields = this.getClass().getDeclaredFields(); // get all the
-                                                              // attributes
-                                                              // inside this
-                                                              // object
+        Field[] fields = this.getClass().getDeclaredFields(); 
 
         try {
-            // if this a declaration statement, print the declaration object id
             if (Declaration.class.isInstance(this)) {
                 Node.indent(identSize + 1);
-                System.out.println("declaration id: [" + ((Declaration) this).hashCode() + "]");
             }
 
-            for (Field field : fields) { // iterate through each field
-                field.setAccessible(true); // make private method accessible
+            for (Field field : fields) {
+                field.setAccessible(true);
 
                 if (Node.class.isAssignableFrom(field.getType())) {
-                    // if it is an attribute of type inherited from Node
-                    // then print out the attribute's name first
                     if (field.get(this) != null) {
                         Node.indent(identSize + 1);
                         System.out.println(field.getName() + ":");
-                        // then recursively call the printNodeRelfection on this
-                        // attribute
                         ((Node) field.get(this)).printNodeReflection(identSize + 2);
                     }
                 } else {
-                    // if not then just print that attribute's value
                     if (field.getType().equals(List.class)) {
                         ParameterizedType genericTypes = (ParameterizedType) field.getGenericType();
                         Class<?> genericType = (Class<?>) genericTypes.getActualTypeArguments()[0];
@@ -72,7 +63,6 @@ public abstract class Node {
                         }
                     } else if (field.getType().equals(Declaration.class)) {
                         Node.indent(identSize + 1);
-                        System.out.println("declaration reference : [" + field.get(this).hashCode() + "]");
                     } else if (!field.getType().equals(LexicalScope.class)) {
                         Node.indent(identSize + 1);
                         System.out.println(field.getName() + ": " + field.get(this));
@@ -80,7 +70,6 @@ public abstract class Node {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Print node failed :");
             e.printStackTrace();
         }
 

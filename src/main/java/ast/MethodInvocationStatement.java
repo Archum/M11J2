@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-import cil.CIL;
-import cil.CILOption;
-
 public class MethodInvocationStatement extends Statement {
     String invokeObject;
     String invokeClass;
@@ -30,15 +27,8 @@ public class MethodInvocationStatement extends Statement {
     }
 
     @Override
-    public void codeGeneration(Path path, CILOption cilOption)
+    public void codeGeneration(Path path)
             throws IOException {
-        emit(path,  CIL.LDSFLD + CIL.THREE_IDENT
-                + "class [JDK]java.lang." + invokeObject + " [JDK]java.lang."
-                + invokeClass + "::" + invokeObject + "\r\n");
-        //emit(path, CIL.TWO_IDENT + CIL.LDLOC + "\r\n");
-        invokeParameter.get(0).codeGeneration(path, cilOption);
-        emit(path, CIL.TWO_IDENT + CIL.CALLVIRT + CIL.THREE_IDENT
-                + "instance void [JDK]java.lang." + invokeObject + "::"
-                + invokeMethod.value + "(int32)" + "\r\n");
+
     }
 }

@@ -5,9 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import cil.CIL;
-import cil.CILOption;
-
 public class BinaryExpression extends Expression {
     private Expression leftHandSide;
     private BinaryOperator operator;
@@ -26,14 +23,12 @@ public class BinaryExpression extends Expression {
     }
     
     @Override
-    public void codeGeneration(Path path, CILOption cilOption) throws IOException {
+    public void codeGeneration(Path path) throws IOException {
         
-        leftHandSide.codeGeneration(path, cilOption);
-        rightHandSide.codeGeneration(path, cilOption);
+        leftHandSide.codeGeneration(path);
+        rightHandSide.codeGeneration(path);
         
-        StringBuilder msg = new StringBuilder(CIL.TWO_IDENT);
-        String cilOperator = CIL.getBinaryOperator(operator);
-        msg.append(cilOperator + "\r\n");
+        StringBuilder msg = new StringBuilder(TWO_IDENT + "\r\n");
         
         Files.write(path, msg.toString().getBytes(), StandardOpenOption.APPEND);
     }

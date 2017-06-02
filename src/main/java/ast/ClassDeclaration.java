@@ -6,8 +6,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import cil.CILOption;
-
 public class ClassDeclaration extends Node {
     private IdentifierNode classname;
     private List<String> modifiers;
@@ -25,12 +23,11 @@ public class ClassDeclaration extends Node {
     }
 
     @Override
-    public void codeGeneration(Path path, CILOption cilOption) throws IOException {
+    public void codeGeneration(Path path) throws IOException {
     	Files.write(path, "".getBytes(), StandardOpenOption.CREATE);
-        emit(path, ".assembly extern mscorlib{}\r\n.assembly extern JDK{}\r\n.assembly " + classname.value + "{}\r\n.class ");
         iterateModifiers(path, this.modifiers);       
-        emit(path, classname.value + "." + classname.value + " extends [mscorlib]System.Object\r\n{\r\n");
-        classBody.codeGeneration(path, cilOption);
+        emit(path, classname.value + "." + classname.value +"{\r\n");
+        classBody.codeGeneration(path);
         emit(path, "}\r\n");
     }
 }

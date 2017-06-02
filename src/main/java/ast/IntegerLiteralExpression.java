@@ -5,9 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import cil.CIL;
-import cil.CILOption;
-
 public class IntegerLiteralExpression extends Expression {
 	private int value;
 	
@@ -16,7 +13,7 @@ public class IntegerLiteralExpression extends Expression {
 	}
 	
 	@Override
-    public void codeGeneration(Path path, CILOption cilOption) throws IOException {
-		emit(path, CIL.TWO_IDENT + CIL.LDC_I4_S + "   " + value + "\r\n");
+    public void codeGeneration(Path path) throws IOException {
+
 	}
 }
